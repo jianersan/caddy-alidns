@@ -1,13 +1,24 @@
-# 阶段 1：官方 builder 镜像里只编译插件
-FROM caddy:2.7-builder AS builder
+# 使用针对ARM64架构优化的基础镜像
+FROM arm64v8/ubuntu:22.04
 
-ENV GOPROXY=https://goproxy.cn,direct
-# 利用官方预置的源码，直接插插件
-RUN xcaddy build \
-      --with github.com/caddy-dns/alidns
+# 安装构建Caddy所需的依赖
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    curl \
+    git \
+    golang-go \
+    && rm -rf /var/lib/apt/lists/*
 
-# 阶段 2：运行
-FROM caddy:2.7-alpine
-COPY --from=builder /usr/bin/caddy /usr/bin/caddy
-EXPOSE 80 443 2019
-ENTRYPOINT ["caddy"]
+# 设置工作目录
+WORKDIR /app
+
+# 安装 xcaddy (Caddy的定制化构建工具)
+RUN go install github.com/caddyserver/xcaddy/cmd/xcaddy@latest
+
+# 使用 xcaddy 构建包含阿里云DNS插件的Caddy
+RUN /root/go/bin/xcaddy build \
+    --with github.com/caddy-dns/alidns@latest \
+    --output /usr/bin/caddy
+
+# 验证Caddy是否构建成功
+RUN caddy version
