@@ -1,25 +1,20 @@
-# 使用官方Caddy builder镜像构建，然后复制到精简的运行镜像
-FROM caddy:2.7.6-builder-alpine AS builder
-
-# 使用xcaddy直接构建包含alidns插件的Caddy
-RUN xcaddy build \
-    --with github.com/caddy-dns/alidns \
-    --output /usr/bin/caddy
-
-# 运行阶段：使用最小的运行时镜像
+# 使用已验证稳定的基础镜像
 FROM caddy:2.7.6-alpine
 
-# 从构建阶段复制定制化的Caddy二进制文件
-COPY --from=builder /usr/bin/caddy /usr/bin/caddy
+# 使用Caddy内置命令安装插件（此方法之前已验证成功）
+RUN caddy add-package github.com/caddy-dns/alidns
 
-# 验证插件安装
+# 安装后清理APT缓存，减少镜像体积
+RUN rm -rf /var/cache/apk/*
+
+# 验证插件是否安装成功
 RUN caddy list-modules | grep alidns
 
-# 使用非root用户运行
+# 使用非root用户运行（安全最佳实践）
 USER caddy
 
-# 暴露端口
+# 暴露Caddy默认端口
 EXPOSE 80 443 2019
 
-# 启动命令
+# 使用Caddy默认启动命令
 CMD ["caddy", "run"]
