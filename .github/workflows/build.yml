@@ -1,0 +1,29 @@
+name: 编译并推送阿里云
+
+on:
+  schedule:
+    - cron: '0 2 * * *'   # 每天 02:00 UTC（北京时间 10:00）
+  workflow_dispatch:      # 手动触发按钮
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 登录阿里云容器镜像服务
+        uses: docker/login-action@v3
+        with:
+          registry: 你的登录域名（只复制 registry 开头那一段）
+          username: ${{ secrets.ALIYUN_USERNAME }}
+          password: ${{ secrets.ALIYUN_PASSWORD }}
+
+      - name: 构建并推送
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            你的登录域名/命名空间/caddy-alidns:latest
+            你的登录域名/命名空间/caddy-alidns:${{ github.run_number }}
