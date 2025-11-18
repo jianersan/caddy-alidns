@@ -1,4 +1,4 @@
-name: 编译并推送阿里云
+name: 编译caddy并推送阿里云
 
 on:
   schedule:
