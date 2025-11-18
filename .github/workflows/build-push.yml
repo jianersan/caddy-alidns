@@ -7,7 +7,6 @@ on:
 env:
   REGISTRY: registry.cn-hangzhou.aliyuncs.com
   IMAGE_NAME: zhouk/caddy-alidns
-  PLATFORM: linux/arm64
 
 jobs:
   build-and-push:
@@ -25,4 +24,5 @@ jobs:
         context: .
         platforms: linux/arm64
         push: false
-        tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:test
+        标签: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:test
+        no-cache: true
