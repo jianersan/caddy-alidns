@@ -1,20 +1,23 @@
-# 使用已验证稳定的基础镜像
-FROM caddy:2.7.6-alpine
+FROM alpine:3.22 AS builder
 
-# 使用Caddy内置命令安装插件（此方法之前已验证成功）
-RUN caddy add-package github.com/caddy-dns/alidns
+RUN apk add --no-cache go git
+WORKDIR /data
+RUN git clone --depth=1 https://github.com/caddyserver/xcaddy.git
+WORKDIR /data/xcaddy/cmd/xcaddy
+RUN go build -o xcaddy . && \
+    ./xcaddy build latest --with github.com/caddy-dns/alidns
+RUN /data/xcaddy/cmd/xcaddy/caddy list-modules | grep alidns
 
-# 安装后清理APT缓存，减少镜像体积
-RUN rm -rf /var/cache/apk/*
-
-# 验证插件是否安装成功
-RUN caddy list-modules | grep alidns
-
-# 使用非root用户运行（安全最佳实践）
+FROM alpine:3.22
+COPY --from=builder /data/xcaddy/cmd/xcaddy/caddy /usr/bin/caddy
+RUN apk add --no-cache tzdata ca-certificates && \
+    update-ca-certificates && \
+    rm -rf /var/cache/apk/*
+WORKDIR /data
+ENV TZ=Asia/Shanghai
+RUN adduser -D -u 1000 caddy && \
+    mkdir -p /etc/caddy /data && \
+    chown -R caddy:caddy /etc/caddy /data
 USER caddy
-
-# 暴露Caddy默认端口
-EXPOSE 80 443 2019
-
-# 使用Caddy默认启动命令
-CMD ["caddy", "run"]
+EXPOSE 80 443
+CMD ["caddy", "run", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
