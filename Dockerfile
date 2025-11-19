@@ -13,6 +13,7 @@ WORKDIR /tmp/xcaddy/cmd/xcaddy
 RUN go build -o xcaddy .
 
 # 4. 用 xcaddy 编译最新 Caddy + 仅 alidns 插件
+ENV GOTOOLCHAIN=auto
 RUN ./xcaddy build latest --with github.com/caddy-dns/alidns
 
 # 5. 验证插件
