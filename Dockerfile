@@ -1,9 +1,7 @@
 FROM caddy:2.10.2-builder-alpine AS builder
 
 RUN xcaddy build \
-      --with github.com/caddy-dns/alidns \
-      && go clean -cache -modcache \
-      && rm -rf /go/pkg /root/.cache
+      --with github.com/caddy-dns/alidns
 
 FROM alpine:3.20
 RUN apk add --no-cache ca-certificates
