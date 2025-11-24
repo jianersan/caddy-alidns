@@ -43,6 +43,3 @@ jobs:
           ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
-        outputs: type=image,name=target,push=true,compression=zstd,compression-level=19
-        provenance: false
-        sbom: false
